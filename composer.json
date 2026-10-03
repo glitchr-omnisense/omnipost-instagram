@@ -1,0 +1,24 @@
+{
+    "name": "omnipost/instagram",
+    "type": "library",
+    "description": "Omnipost Instagram: the account's feed, the publication of pictures, carousels and reels, and the long-lived token's refresh, through the Instagram API with Instagram Login.",
+    "keywords": ["social", "instagram", "reels", "omnipost"],
+    "license": "LGPL-3.0-or-later",
+    "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
+    "require": {
+        "php": ">=8.2",
+        "glitchr/omnipost": "^1.0@dev",
+        "symfony/http-client": "^6.4|^7.0|^8.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {"Omnipost\\Instagram\\": ""},
+        "exclude-from-classmap": ["/Tests/"]
+    },
+    "autoload-dev": {
+        "psr-4": {"Omnipost\\Instagram\\Tests\\": "Tests/"}
+    },
+    "config": {"sort-packages": true}
+}
