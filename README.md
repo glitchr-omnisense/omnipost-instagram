@@ -5,6 +5,13 @@ feed, pictures, carousels, reels and stories published, the long-lived token ref
 account connected from a back office - through the *Instagram API with Instagram Login*
 (`graph.instagram.com`), no Facebook Page needed.
 
+```php
+$instagram = (new InstagramProviderFactory($http))->create(['access_token' => '...']);   // $http: the application's HTTP client; none given, the factory makes its own
+```
+
+No framework needed: the package requires `glitchr/omnipost` and `symfony/http-client`. In a
+Symfony application, the same through the bundle's configuration:
+
 ```yaml
 omnipost:
     providers:
