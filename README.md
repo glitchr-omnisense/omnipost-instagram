@@ -87,4 +87,4 @@ To show **someone else's** public post, no API is needed: Instagram's embed (the
   Reels: MP4 or MOV, H.264 and AAC, 9:16, 3 seconds to 15 minutes, at most 1 GB; pictures: JPEG,
   at most 8 MB, 4:5 to 1.91:1 (here 4:5 and 1:1, the formats a site renders).
 
-License: LGPL-3.0-or-later.
+License: MIT since 2026-10-09; earlier versions remain published under LGPL-3.0-or-later.

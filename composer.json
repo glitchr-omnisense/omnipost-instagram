@@ -3,7 +3,7 @@
     "type": "library",
     "description": "Omnipost Instagram: the account's feed, the publication of pictures, carousels and reels, and the long-lived token's refresh, through the Instagram API with Instagram Login.",
     "keywords": ["social", "instagram", "reels", "omnipost"],
-    "license": "LGPL-3.0-or-later",
+    "license": "MIT",
     "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
     "require": {
         "php": ">=8.2",
