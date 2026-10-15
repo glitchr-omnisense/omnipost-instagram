@@ -87,4 +87,17 @@ To show **someone else's** public post, no API is needed: Instagram's embed (the
   Reels: MP4 or MOV, H.264 and AAC, 9:16, 3 seconds to 15 minutes, at most 1 GB; pictures: JPEG,
   at most 8 MB, 4:5 to 1.91:1 (here 4:5 and 1:1, the formats a site renders).
 
+## Responsibility
+
+This package is an independent, unofficial client: it is not affiliated with, endorsed by or
+sponsored by Meta Platforms, Inc. (Instagram). It reaches their service on behalf of whoever runs
+it, and it does not redistribute their data beyond the short excerpts recorded as test fixtures. Its
+MIT licence covers this package's code only and grants no right to the service or to its data.
+
+Whoever installs and runs this package is responsible for complying with Meta's terms ([Meta
+Platform Terms](https://developers.facebook.com/terms/)), for obtaining whatever they require (an
+account, a key, a licence or subscription, an attribution or a citation, a rate limit to respect),
+and for any use made of what it returns. The authors publish it free of charge, make no commercial
+use of it, and accept no liability for how it is used (see [LICENSE](LICENSE)).
+
 License: MIT since 2026-10-09; earlier versions remain published under LGPL-3.0-or-later.
