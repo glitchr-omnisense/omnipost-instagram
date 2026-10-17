@@ -1,6 +1,6 @@
 # omnipost/instagram
 
-Instagram for [glitchr/omnipost](https://github.com/glitchr-studio/omnipost): the account and its
+Instagram for [omniscient/omnipost](https://github.com/glitchr-studio/omnipost): the account and its
 feed, pictures, carousels, reels and stories published, the long-lived token refreshed and the
 account connected from a back office - through the *Instagram API with Instagram Login*
 (`graph.instagram.com`), no Facebook Page needed.
@@ -9,7 +9,7 @@ account connected from a back office - through the *Instagram API with Instagram
 $instagram = (new InstagramProviderFactory($http))->create(['access_token' => '...']);   // $http: the application's HTTP client; none given, the factory makes its own
 ```
 
-No framework needed: the package requires `glitchr/omnipost` and `symfony/http-client`. In a
+No framework needed: the package requires `omniscient/omnipost` and `symfony/http-client`. In a
 Symfony application, the same through the bundle's configuration:
 
 ```yaml
