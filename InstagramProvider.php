@@ -89,6 +89,7 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
             maxVideoSize: 1 << 30,
             maxImageSize: 8 << 20,
             captionMaxLength: 2200,
+            linkInCaption: false, // a caption's address is not a link on Instagram: the post's link goes nowhere
             maxTags: 30,
             mediaMaxCount: 10,
             videoFormats: ['video/mp4', 'video/quicktime', 'mp4', 'mov'],
@@ -137,7 +138,7 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
         if ($violations = $this->validate($post)) {
             throw new InvalidPostException($this->getName(), $violations);
         }
-        $caption = $post->text();
+        $caption = $post->text($this->capabilities()->linkInCaption);
         $media = $post->media[0];
 
         $container = match ($post->kind) {
