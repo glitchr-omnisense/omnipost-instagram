@@ -298,4 +298,36 @@ final class InstagramProviderTest extends TestCase
             'paging' => ['cursors' => ['before' => 'QVFIUa', 'after' => 'QVFIUk'], 'next' => 'https://graph.instagram.com/v23.0/me/media?after=QVFIUk'],
         ];
     }
+
+    /**
+     * Not reached, or answering an error: nothing of a credential anywhere in what a log of the whole
+     * chain writes - the messages, the previous exceptions (copies of the HTTP client's, their class
+     * kept), the traces' arguments (the options, a response holding them) when
+     * zend.exception_ignore_args is off.
+     */
+    public function testNoPartOfAFailureChainHoldsACredential(): void
+    {
+        $ignoreArgs = ini_set('zend.exception_ignore_args', '0');
+        $answers = [
+            static fn (string $method, string $url): never => throw new \Symfony\Component\HttpClient\Exception\TransportException(\sprintf('Could not resolve host: graph.instagram.com for "%s".', $url)),
+            static fn (string $method, string $url): MockResponse => new MockResponse('{"error": {"message": "Invalid credentials", "code": 401}}', ['http_code' => 401, 'response_headers' => ['Content-Type' => 'application/json']]),
+        ];
+        try {
+            foreach ($answers as $answer) {
+                try {
+                    (new InstagramProviderFactory(new \Symfony\Component\HttpClient\MockHttpClient($answer)))->create(['access_token' => 'instagram-token-123', 'app_id' => '990', 'app_secret' => 'instagram-secret-456'])->account();
+                    self::fail('no exception');
+                } catch (\Omnipost\Exception\OmnipostException $e) {
+                    for ($one = $e; null !== $one; $one = $one->getPrevious()) {
+                        foreach (['instagram-token-123', 'instagram-secret-456'] as $secret) {
+                            self::assertFalse(str_contains($one->getMessage(), $secret), $one->getMessage());
+                            self::assertFalse(str_contains(print_r($one->getTrace(), true), $secret), 'a trace holds '.$secret);
+                        }
+                    }
+                }
+            }
+        } finally {
+            ini_set('zend.exception_ignore_args', false !== $ignoreArgs ? $ignoreArgs : '1');
+        }
+    }
 }

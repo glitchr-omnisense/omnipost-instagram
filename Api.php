@@ -4,6 +4,7 @@ namespace Omnipost\Instagram;
 
 use Omnipost\Exception\InvalidConfigException;
 use Omnipost\Exception\ProviderException;
+use Omnipost\Http\Redaction;
 use Omnipost\Exception\UnauthorizedException;
 use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Contracts\HttpClient\Exception\ExceptionInterface as HttpExceptionInterface;
@@ -86,11 +87,14 @@ final class Api
             $data = json_decode($response->getContent(false), true);
         } catch (HttpExceptionInterface $e) {
             // Not chained: the transport's message carries the URL, the token in it.
-            throw new ProviderException(self::PROVIDER, 'Instagram could not be reached: '.$this->redact($e->getMessage()));
+            // The token, in the URL or the body, masked in the message and the previous, a copy; no trace keeps the options.
+            $secrets = Redaction::secrets($url, $options);
+
+            throw Redaction::withoutArguments(new ProviderException(self::PROVIDER, 'Instagram could not be reached: '.Redaction::text($e->getMessage(), $secrets), null, null, Redaction::copy($e, $secrets)));
         }
         $data = \is_array($data) ? $data : [];
         if ($status >= 400 || isset($data['error']) || isset($data['error_type'])) {
-            throw $this->error($status, $data);
+            throw Redaction::withoutArguments($this->error($status, $data));
         }
 
         return $data;
@@ -103,7 +107,7 @@ final class Api
 
     private function token(): string
     {
-        return $this->accessToken ?: throw new InvalidConfigException('The "instagram" provider needs: access_token.');
+        return $this->accessToken ?: throw Redaction::withoutArguments(new InvalidConfigException('The "instagram" provider needs: access_token.'));
     }
 
     /** @param array<string, mixed> $data */
