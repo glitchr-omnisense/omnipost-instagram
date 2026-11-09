@@ -5,6 +5,10 @@ feed, pictures, carousels, reels and stories published, the long-lived token ref
 account connected from a back office - through the *Instagram API with Instagram Login*
 (`graph.instagram.com`), no Facebook Page needed.
 
+Contracts: publish (`PublisherInterface`), feed (`FeedInterface`), token refresh
+(`RefreshableInterface`) and OAuth (`OAuthInterface`). No share link: Instagram has no share page
+on the web; the networks that have one are in omnipost's core (`Omnipost\Share\`).
+
 ```php
 $instagram = (new InstagramProviderFactory($http))->create(['access_token' => '...']);   // $http: the application's HTTP client; none given, the factory makes its own
 ```
