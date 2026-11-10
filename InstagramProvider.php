@@ -25,6 +25,8 @@ use Omnipost\Model\Violation;
 use Omnipost\Platform;
 use Omnipost\PublisherInterface;
 use Omnipost\Validator;
+use Omnisense\Contracts\Policy\DeclaresUsagePolicyInterface;
+use Omnisense\Contracts\Policy\UsagePolicy;
 
 /**
  * An Instagram professional account: who it is, what it posted, and a post
@@ -42,7 +44,7 @@ use Omnipost\Validator;
  * twice at once for one container (two workers polling): the caller holds
  * a lock around status().
  */
-final class InstagramProvider implements PublisherInterface, FeedInterface, RefreshableInterface, OAuthInterface
+final class InstagramProvider implements PublisherInterface, FeedInterface, RefreshableInterface, OAuthInterface, DeclaresUsagePolicyInterface
 {
     public const AUTHORIZE_URL = 'https://www.instagram.com/oauth/authorize';
     public const TOKEN_URL = 'https://api.instagram.com/oauth/access_token';
@@ -65,6 +67,12 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
     public function getName(): string
     {
         return 'instagram';
+    }
+
+    /** Its usage policy, as policy.json declares it (the platform's terms, read on its verifiedAt). */
+    public function usagePolicy(): UsagePolicy
+    {
+        return UsagePolicy::fromFile(__DIR__.'/policy.json');
     }
 
     public function getPlatform(): Platform

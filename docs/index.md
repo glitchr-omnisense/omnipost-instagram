@@ -155,7 +155,7 @@ omnipost:
 | Answer | Exception |
 |---|---|
 | HTTP 401, Graph code 190, subcode 463 or 467 | `UnauthorizedException`: the account is connected again |
-| Graph code 4, 17, 32, 613 (call limits) | `ProviderException` (`Too many calls, try again later: ...`, `providerCode` the code) |
+| HTTP 429, Graph code 4, 17, 32, 613, 80002 (call limits) | `RateLimitedException`, a `ProviderException` (`Too many calls, try again later: ...`, `providerCode` the code, `retryAfter` Meta's estimated wait); the wait holds the next calls (`UsageLimitReachedException`, nothing sent) |
 | any other error (HTTP 400 or more, or an `error` / `error_type` in the body) | `ProviderException` with the status and Graph's code |
 | transport error | `ProviderException` (`Instagram could not be reached: ...`, the token masked) |
 | no token in an OAuth answer | `ProviderException` |
@@ -163,8 +163,28 @@ omnipost:
 | a post the network would refuse | `InvalidPostException`, nothing sent |
 | `delete()` | `NotSupportedException` |
 
-Instagram caps the publications made through the API per account and per 24 hours; the provider
-does not read the cap (`GET /<user>/content_publishing_limit`).
+## Usage policy
+
+`policy.json` (read 2026-11-10 against the
+[content publishing guide](https://developers.facebook.com/docs/instagram-platform/content-publishing),
+[rate limiting](https://developers.facebook.com/docs/graph-api/overview/rate-limiting), the
+[Instagram Platform overview](https://developers.facebook.com/docs/instagram-platform/overview)
+and the [Meta Platform Terms](https://developers.facebook.com/terms/), last updated 2026-02-03):
+
+- `publish`: 100 a day per account, the guide's "100 API-published posts within a 24-hour moving
+  period" (a carousel one post); the same guide's carousel section says 50, a site that publishes
+  carousels may tighten to it. The provider does not read the account's usage
+  (`GET /<user>/content_publishing_limit`).
+- The business use case limit, 4,800 × the account's impressions over 24 hours, depends on the
+  audience: not declared; Meta's estimated wait (X-Business-Use-Case-Usage) is kept when it
+  throttles.
+- Commercial use allowed; Platform Data kept only while needed, then deleted; selling or licensing
+  it forbidden; no caching period nor attribution rule in the terms.
+- A professional account; Standard Access for accounts the developer owns or manages, Advanced
+  Access (App Review) to publish for anyone else.
+
+Nothing is retried: a container or a `media_publish` refused is not sent again (Instagram has no
+idempotency key); `status()` says whether it went out. See the core's `docs/policies.md`.
 
 ## Verified, and not
 

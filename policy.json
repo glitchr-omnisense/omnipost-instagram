@@ -1,0 +1,48 @@
+{
+    "$schema": "https://github.com/glitchr-omnisense/contracts/blob/1.x/resources/usage-policy.schema.json",
+    "provider": "instagram",
+    "rateLimits": [
+        {
+            "max": 100,
+            "window": "day",
+            "scope": "key",
+            "operations": [
+                "publish"
+            ],
+            "note": "Content publishing: \"Instagram accounts are limited to 100 API-published posts within a 24-hour moving period\", a carousel counting as one, enforced on media_publish (developers.facebook.com/docs/instagram-platform/content-publishing, read 2026-11-10). Counted per configured account (the registry's name) on publish(): each one creates the container that becomes at most one post; status() makes the media_publish call once the container is FINISHED. GET /<IG_ID>/content_publishing_limit gives the account's usage. The same page's carousel section says 50 published posts in 24 hours: a site that publishes carousels may tighten to 50."
+        }
+    ],
+    "concurrency": null,
+    "rights": {
+        "commercial": "allowed",
+        "openSourceRequired": false,
+        "caching": {
+            "permission": "unknown",
+            "maxTtl": null
+        },
+        "storage": "contract",
+        "redistribution": "forbidden",
+        "attribution": {
+            "required": false,
+            "text": null,
+            "url": null,
+            "where": []
+        },
+        "licence": null
+    },
+    "requirements": {
+        "key": true,
+        "userAgent": {
+            "required": false,
+            "pattern": null
+        }
+    },
+    "provenance": {
+        "terms": "https://developers.facebook.com/terms/",
+        "policy": "https://developers.facebook.com/devpolicy/",
+        "verifiedAt": "2026-11-10",
+        "declaredBy": "maintainer",
+        "contact": null,
+        "notes": "Rate limits (developers.facebook.com/docs/graph-api/overview/rate-limiting, 2026-11-10): every Instagram endpoint but Business Discovery and Hashtag Search is under Business Use Case limits, \"Calls within 24 hours = 4800 * Number of Impressions\" per app and app user pair: a figure that depends on the account's audience, so not declared; X-Business-Use-Case-Usage gives the usage and estimated_time_to_regain_access (minutes), which the provider's API client keeps as a wait; throttling answers codes 4, 17, 32, 613 or 80002. Containers expire after 24 hours unpublished (status EXPIRED); Meta advises reading a container's status once a minute for at most 5 minutes. Access (developers.facebook.com/docs/instagram-platform/overview): the account must be an Instagram professional account (business or creator); Standard Access suffices for accounts the developer owns or manages, Advanced Access (App Review) is needed to publish for anyone else. Meta Platform Terms (last updated 2026-02-03): Platform Data kept only while needed for a legitimate business purpose consistent with the terms, then deleted (section 3); selling or licensing Platform Data is forbidden, sharing it limited; the platform not sold, transferred nor sublicensed. The terms set no caching period and no attribution rule (Meta's brand guidelines apply to its logos). No idempotency key exists for container creation nor media_publish."
+    }
+}

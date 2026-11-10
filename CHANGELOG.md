@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+
+- `policy.json` (`extra.omnisense.policy`), read 2026-11-10: 100 API-published posts a day per
+  account (`publish`), commercial use allowed, Platform Data kept only while needed and never sold
+  or licensed, the business use case limit (4,800 × impressions) and access levels in the notes.
+  `InstagramProvider` declares it (`DeclaresUsagePolicyInterface`).
+- `Api` takes the provider's wait (its last argument, from `Config::backoff()`): no call while one
+  lasts; a 429 and Meta's codes 4, 17, 32, 613 and 80002 (`RATE_LIMIT_CODES`, 80002 added) are a
+  `RateLimitedException`, a `ProviderException` with the same message as before, its `retryAfter`
+  Meta's `estimated_time_to_regain_access` (X-Business-Use-Case-Usage, `Api::regain()`) or a
+  Retry-After, which holds the next calls. Nothing retries: a container or a `media_publish`
+  is sent once (`Tests/PolicyTest.php`: a 429 and a 500 on the writes, the 101st post never sent).
+- PHPStan at level max (`phpstan.neon`), the 61 errors there were in `phpstan-baseline.neon`.
+
 ### Fixed
 
 - A failure no longer carries the token: every trace of what the API threw kept the options (the

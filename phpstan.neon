@@ -1,0 +1,11 @@
+# PHPStan at the highest level on the whole package, since omnisense/contracts came in.
+# phpstan-baseline.neon holds what the package had then; new code adds nothing to it.
+includes:
+    - phpstan-baseline.neon
+
+parameters:
+    level: max
+    paths:
+        - .
+    excludePaths:
+        - vendor/ (?)

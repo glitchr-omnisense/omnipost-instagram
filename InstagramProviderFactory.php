@@ -44,7 +44,7 @@ final class InstagramProviderFactory extends ProviderFactory
     protected function build(Config $config): ProviderInterface
     {
         return new InstagramProvider(
-            new Api($config['access_token'] ? (string) $config['access_token'] : null, (string) $config['base_uri'], (string) $config['api_version'], $this->http),
+            new Api($config['access_token'] ? (string) $config['access_token'] : null, (string) $config['base_uri'], (string) $config['api_version'], $this->http, $config->backoff()),
             (string) $config['user_id'],
             $config['app_id'] ? (string) $config['app_id'] : null,
             $config['app_secret'] ? (string) $config['app_secret'] : null,
