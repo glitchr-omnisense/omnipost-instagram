@@ -311,6 +311,33 @@ final class InstagramProviderTest extends TestCase
         self::assertSame(['178', PublicationState::PUBLISHED], [$published->id, $published->state]);
     }
 
+    /**
+     * An answer of another shape than the API's - a list where a string or an object belongs, a
+     * string where a list does - is a ProviderException, not a TypeError.
+     */
+    public function testAnAnswerOfAnotherShapeIsAProviderException(): void
+    {
+        $instagram = static fn (array ...$answers): InstagramProvider => self::instagram(new MockHttpClient(array_map(static fn (array $answer): MockResponse => self::json($answer, isset($answer['error']) ? 400 : 200), $answers)));
+        $cases = [
+            'the feed\'s data a string' => [static fn () => $instagram(['data' => 'R1'])->feed()],
+            'a feed item a string' => [static fn () => $instagram(['data' => ['R1']])->feed()],
+            'a caption a list' => [static fn () => $instagram(['data' => [['id' => 'R1', 'media_type' => 'VIDEO', 'caption' => ['Strauss']]]])->feed()],
+            'a carousel\'s children a string' => [static fn () => $instagram(['data' => [['id' => 'C2', 'media_type' => 'CAROUSEL_ALBUM', 'children' => ['data' => 'C2a']]]])->feed()],
+            'a timestamp a list' => [static fn () => $instagram(['data' => [['id' => 'R1', 'media_type' => 'VIDEO', 'timestamp' => ['2026-09-30']]]])->feed()],
+            'the next cursor a list' => [static fn () => $instagram(['paging' => ['cursors' => ['after' => ['QVFIUk']], 'next' => 'https://graph.instagram.com/v23.0/me/media'], 'data' => []])->feed()],
+            'the account\'s name a list' => [static fn () => $instagram(['id' => '178414', 'username' => 'claire.violin', 'name' => ['Claire']])->account()],
+            'a media\'s permalink a list' => [static fn () => $instagram(['error' => ['message' => '(#100) Tried accessing nonexisting field (status_code) on node type (Media)', 'code' => 100]], ['id' => '178', 'permalink' => ['https://www.instagram.com/reel/DAbc/']])->status('178')],
+        ];
+        foreach ($cases as $case => [$call]) {
+            try {
+                $call();
+                self::fail($case.': read as it came.');
+            } catch (ProviderException $e) {
+                self::assertSame('[instagram] Instagram answered in another shape than its API\'s.', $e->getMessage(), $case);
+            }
+        }
+    }
+
     private static function instagram(MockHttpClient $http): InstagramProvider
     {
         $provider = (new InstagramProviderFactory($http))->create(['access_token' => 'IGAA-token']);

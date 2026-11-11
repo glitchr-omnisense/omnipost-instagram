@@ -25,30 +25,6 @@ parameters:
 			path: Api.php
 
 		-
-			message: '#^Cannot access offset ''after'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Cannot access offset ''cursors'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Cannot access offset ''data'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Cannot access offset ''next'' on mixed\.$#'
-			identifier: offsetAccess.nonOffsetAccessible
-			count: 1
-			path: InstagramProvider.php
-
-		-
 			message: '#^Cannot access offset 0 on mixed\.$#'
 			identifier: offsetAccess.nonOffsetAccessible
 			count: 1
@@ -67,79 +43,13 @@ parameters:
 			path: InstagramProvider.php
 
 		-
-			message: '#^Parameter \#1 \$array of function array_values expects array\<T\>, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, Closure\(array\<string, mixed\>\)\: Omnipost\\Model\\FeedItem given\.$#'
-			identifier: argument.type
-			count: 2
-			path: InstagramProvider.php
-
-		-
 			message: '#^Parameter \#1 \$fields of method Omnipost\\Instagram\\InstagramProvider\:\:container\(\) expects array\<string, bool\|float\|int\|string\|null\>, array\<string, mixed\> given\.$#'
 			identifier: argument.type
 			count: 1
 			path: InstagramProvider.php
 
 		-
-			message: '#^Parameter \#1 \$timestamp of static method Omnipost\\Instagram\\InstagramProvider\:\:date\(\) expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 2
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#2 \$next of class Omnipost\\Model\\Feed constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
 			message: '#^Parameter \#2 \$scopes of method Omnipost\\Instagram\\InstagramProvider\:\:hold\(\) expects list\<string\>, list\<mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#4 \$name of class Omnipost\\Model\\Account constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#4 \$permalink of class Omnipost\\Model\\Publication constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#4 \$url of class Omnipost\\Model\\FeedItem constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#5 \$thumbnailUrl of class Omnipost\\Model\\FeedItem constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#6 \$caption of class Omnipost\\Model\\FeedItem constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#6 \$pictureUrl of class Omnipost\\Model\\Account constructor expects string\|null, mixed given\.$#'
-			identifier: argument.type
-			count: 1
-			path: InstagramProvider.php
-
-		-
-			message: '#^Parameter \#9 \$kind of class Omnipost\\Model\\Account constructor expects string\|null, mixed given\.$#'
 			identifier: argument.type
 			count: 1
 			path: InstagramProvider.php

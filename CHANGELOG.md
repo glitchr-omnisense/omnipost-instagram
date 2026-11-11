@@ -9,6 +9,10 @@
   a publication with the id `""` or `"Array"`, and a carousel sent with an empty child); a
   `status_code` that is not a string is never taken for `FINISHED` (`true` was, and published the
   container); a media read back with an id that is not one keeps the id asked for.
+- An answer of another shape than the API's is a `ProviderException` ("Instagram answered in another
+  shape than its API's."), not a `TypeError`: a feed's `data` or a carousel's children that are not a
+  list, an item that is not an object, a caption, URL, timestamp, cursor, account name or permalink
+  that is a list (`Data`, internal).
 
 ### Added
 

@@ -217,17 +217,18 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
     {
         $me = $this->api->get($this->user, ['fields' => 'id,username,name,profile_picture_url,followers_count,media_count,account_type']);
         $username = (string) ($me['username'] ?? '');
+        $data = Data::of($me);
 
         return new Account(
             Platform::INSTAGRAM,
             (string) $me['id'],
             $username,
-            $me['name'] ?? null,
+            $data->stringOrNull('name'),
             '' !== $username ? 'https://www.instagram.com/'.$username.'/' : null,
-            $me['profile_picture_url'] ?? null,
+            $data->stringOrNull('profile_picture_url'),
             isset($me['followers_count']) ? (int) $me['followers_count'] : null,
             isset($me['media_count']) ? (int) $me['media_count'] : null,
-            $me['account_type'] ?? null,
+            $data->stringOrNull('account_type'),
         );
     }
 
@@ -235,10 +236,12 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
     {
         $page = $this->api->get($this->user.'/media', ['fields' => self::FEED_FIELDS, 'limit' => max(1, min(100, $limit)), 'after' => $cursor]);
 
+        $page = Data::of($page);
+
         return new Feed(
-            array_map(self::item(...), array_values($page['data'] ?? [])),
+            array_map(self::item(...), $page->objects('data')),
             // The last page still has cursors: only "next" says there is one more.
-            isset($page['paging']['next']) ? ($page['paging']['cursors']['after'] ?? null) : null,
+            $page->has('paging.next') ? $page->stringOrNull('paging.cursors.after') : null,
         );
     }
 
@@ -323,7 +326,9 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
 
         $id = $media['id'] ?? null;
 
-        return new Publication(Platform::INSTAGRAM, (\is_string($id) && '' !== $id) || \is_int($id) ? (string) $id : $mediaId, PublicationState::PUBLISHED, $media['permalink'] ?? null, null, self::date($media['timestamp'] ?? null), $media);
+        $data = Data::of($media);
+
+        return new Publication(Platform::INSTAGRAM, (\is_string($id) && '' !== $id) || \is_int($id) ? (string) $id : $mediaId, PublicationState::PUBLISHED, $data->stringOrNull('permalink'), null, self::date($data->stringOrNull('timestamp')), $media);
     }
 
     /**
@@ -357,32 +362,31 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
         return new Token($token, isset($data['expires_in']) ? new \DateTimeImmutable('+'.(int) $data['expires_in'].' seconds') : null, null, $scopes, $accountId);
     }
 
-    /** @param array<string, mixed> $m */
-    private static function item(array $m): FeedItem
+    private static function item(Data $m): FeedItem
     {
-        $type = $m['media_type'] ?? 'IMAGE';
+        $type = $m->get('media_type') ?? 'IMAGE';
         $kind = match ($type) {
-            'VIDEO' => 'REELS' === ($m['media_product_type'] ?? 'REELS') ? PostKind::REEL : PostKind::VIDEO,
+            'VIDEO' => 'REELS' === ($m->get('media_product_type') ?? 'REELS') ? PostKind::REEL : PostKind::VIDEO,
             'CAROUSEL_ALBUM' => PostKind::CAROUSEL,
-            default => 'STORY' === ($m['media_product_type'] ?? null) ? PostKind::STORY : PostKind::IMAGE,
+            default => 'STORY' === $m->get('media_product_type') ? PostKind::STORY : PostKind::IMAGE,
         };
-        $children = array_map(self::item(...), array_values($m['children']['data'] ?? []));
+        $children = array_map(self::item(...), $m->objects('children.data'));
 
         return new FeedItem(
-            (string) $m['id'],
+            (string) $m->get('id'),
             $kind,
-            (string) ($m['permalink'] ?? ''),
-            $m['media_url'] ?? null,
+            (string) ($m->get('permalink') ?? ''),
+            $m->stringOrNull('media_url'),
             // A video's still; a picture is its own; a carousel shows its first child.
-            $m['thumbnail_url'] ?? ('VIDEO' === $type ? null : ($m['media_url'] ?? ($children[0]->thumbnailUrl ?? null))),
-            $m['caption'] ?? null,
-            self::date($m['timestamp'] ?? null),
+            $m->stringOrNull('thumbnail_url') ?? ('VIDEO' === $type ? null : ($m->stringOrNull('media_url') ?? ($children[0]->thumbnailUrl ?? null))),
+            $m->stringOrNull('caption'),
+            self::date($m->stringOrNull('timestamp')),
             null,
             $children,
-            isset($m['like_count']) ? (int) $m['like_count'] : null,
-            isset($m['comments_count']) ? (int) $m['comments_count'] : null,
+            $m->has('like_count') ? (int) $m->get('like_count') : null,
+            $m->has('comments_count') ? (int) $m->get('comments_count') : null,
             null,
-            $m,
+            $m->toArray(),
         );
     }
 
