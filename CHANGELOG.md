@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- An answer without an id is no post: a container, a carousel item or a `media_publish` answered
+  with no id, an empty one or one that is not a string nor a number is a `ProviderException` (it was
+  a publication with the id `""` or `"Array"`, and a carousel sent with an empty child); a
+  `status_code` that is not a string is never taken for `FINISHED` (`true` was, and published the
+  container); a media read back with an id that is not one keeps the id asked for.
+
 ### Added
 
 - `policy.json` (`extra.omnisense.policy`), read 2026-11-10: 100 API-published posts a day per

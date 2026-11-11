@@ -162,13 +162,13 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
             PostKind::STORY => $this->container(['media_type' => 'STORIES'] + self::source($media)),
             PostKind::CAROUSEL => $this->container([
                 'media_type' => 'CAROUSEL',
-                'children' => implode(',', array_map(fn (Media $m) => $this->container(['is_carousel_item' => true] + self::source($m, true))['id'], $post->media)),
+                'children' => implode(',', array_map(fn (Media $m) => self::id($this->container(['is_carousel_item' => true] + self::source($m, true)), 'Instagram answered without the carousel item\'s id.'), $post->media)),
                 'caption' => $caption,
             ]),
             default => throw NotSupportedException::operation($this->getName(), \sprintf('publish %s posts', $post->kind->value)),
         };
 
-        return new Publication(Platform::INSTAGRAM, (string) $container['id'], PublicationState::PENDING, raw: $container);
+        return new Publication(Platform::INSTAGRAM, self::id($container, 'Instagram answered without the container\'s id.'), PublicationState::PENDING, raw: $container);
     }
 
     /**
@@ -190,11 +190,13 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
             return $this->published($publicationId);
         }
 
-        switch ($container['status_code'] ?? null) {
+        // A string, compared as one: no other value is taken for FINISHED.
+        $state = $container['status_code'] ?? null;
+        switch (\is_string($state) ? $state : null) {
             case 'FINISHED':
                 $media = $this->api->post($this->user.'/media_publish', ['creation_id' => $publicationId]);
 
-                return $this->published((string) $media['id']);
+                return $this->published(self::id($media, 'Instagram answered media_publish without the media\'s id: status() reads the container again.'));
             case 'PUBLISHED':
                 // Published by an earlier status(): the media's id was in its answer, the container does not give it back.
                 return new Publication(Platform::INSTAGRAM, $publicationId, PublicationState::PUBLISHED, raw: $container);
@@ -319,7 +321,25 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
     {
         $media = $this->api->get($mediaId, ['fields' => 'id,permalink,timestamp,media_type']);
 
-        return new Publication(Platform::INSTAGRAM, (string) ($media['id'] ?? $mediaId), PublicationState::PUBLISHED, $media['permalink'] ?? null, null, self::date($media['timestamp'] ?? null), $media);
+        $id = $media['id'] ?? null;
+
+        return new Publication(Platform::INSTAGRAM, (\is_string($id) && '' !== $id) || \is_int($id) ? (string) $id : $mediaId, PublicationState::PUBLISHED, $media['permalink'] ?? null, null, self::date($media['timestamp'] ?? null), $media);
+    }
+
+    /**
+     * The id of what Instagram created or published: a string or a number, never empty. Anything
+     * else is no post: a ProviderException, never a publication with an id that is not one.
+     *
+     * @param array<string, mixed> $answer
+     */
+    private static function id(array $answer, string $missing): string
+    {
+        $id = $answer['id'] ?? null;
+        if ((\is_string($id) && '' !== $id) || \is_int($id)) {
+            return (string) $id;
+        }
+
+        throw new ProviderException(Api::PROVIDER, $missing);
     }
 
     /**

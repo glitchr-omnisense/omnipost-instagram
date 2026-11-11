@@ -278,6 +278,47 @@ final class InstagramProviderTest extends TestCase
         $instagram->feed();
     }
 
+    /**
+     * An answer without an id, or with one that is not an id, is no post: a ProviderException,
+     * never a publication with an empty id or "Array", and a container whose status is not the
+     * string FINISHED is never published.
+     */
+    public function testAnAnswerWithoutAnIdIsNeverTakenForAPost(): void
+    {
+        $instagram = static fn (MockResponse ...$answers): InstagramProvider => self::instagram(new MockHttpClient($answers));
+        $carousel = Post::carousel([Media::image('https://site.example/a.jpg', null, 1080, 1350), Media::image('https://site.example/b.jpg', null, 1080, 1350)]);
+        $cases = [
+            'a container with no id' => [static fn () => $instagram(self::json(['status' => 'ok']))->publish(self::reel()), 'Instagram answered without the container\'s id.'],
+            'a container id that is a list' => [static fn () => $instagram(self::json(['id' => ['c1']]))->publish(self::reel()), 'Instagram answered without the container\'s id.'],
+            'a container id left empty' => [static fn () => $instagram(self::json(['id' => '']))->publish(self::reel()), 'Instagram answered without the container\'s id.'],
+            // The carousel itself is not created: no third answer.
+            'a carousel item with no id' => [static fn () => $instagram(self::json(['id' => 'c1']), self::json([]))->publish($carousel), 'Instagram answered without the carousel item\'s id.'],
+            'media_publish with no id' => [static fn () => $instagram(self::json(['status_code' => 'FINISHED']), self::json(['success' => true]))->status('c1'), 'Instagram answered media_publish without the media\'s id: status() reads the container again.'],
+        ];
+        foreach ($cases as $case => [$call, $message]) {
+            try {
+                $call();
+                self::fail($case.': taken for a post.');
+            } catch (ProviderException $e) {
+                self::assertSame('[instagram] '.$message, $e->getMessage(), $case);
+            }
+        }
+
+        // A status_code that is not a string is not FINISHED: nothing published (a second call would find no answer).
+        self::assertSame(PublicationState::PROCESSING, $instagram(self::json(['status_code' => true]))->status('c1')->state);
+        // The media read back with an id that is not one: the id asked for.
+        $published = $instagram(self::json(['status_code' => 'FINISHED']), self::json(['id' => '178']), self::json(['id' => ['178'], 'permalink' => 'https://www.instagram.com/reel/DAbc/']))->status('c1');
+        self::assertSame(['178', PublicationState::PUBLISHED], [$published->id, $published->state]);
+    }
+
+    private static function instagram(MockHttpClient $http): InstagramProvider
+    {
+        $provider = (new InstagramProviderFactory($http))->create(['access_token' => 'IGAA-token']);
+        self::assertInstanceOf(InstagramProvider::class, $provider);
+
+        return $provider;
+    }
+
     public function testNothingIsDeleted(): void
     {
         $this->expectException(NotSupportedException::class);
