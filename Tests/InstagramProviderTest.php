@@ -20,7 +20,7 @@ use Symfony\Component\HttpClient\Response\MockResponse;
 
 final class InstagramProviderTest extends TestCase
 {
-    /** @var list<array{string, string, array<string, string>}> method, path, parameters (query and body) */
+    /** @var list<array{string, string, array<mixed>}> method, path, parameters (query and body) */
     private array $calls = [];
 
     private int $created = 0;
@@ -28,6 +28,7 @@ final class InstagramProviderTest extends TestCase
     /** @var array<string, string> the containers' states, as Instagram would answer them */
     private array $containers = [];
 
+    /** @param array<string, mixed> $options */
     private function provider(array $options = []): InstagramProvider
     {
         $http = new MockHttpClient(function (string $method, string $url, array $options): MockResponse {
@@ -61,9 +62,10 @@ final class InstagramProviderTest extends TestCase
             };
         });
 
-        return (new InstagramProviderFactory($http))->create($options + ['access_token' => 'IGAA-token', 'app_id' => '990', 'app_secret' => 's3cret']);
+        return self::instagram($http, $options + ['access_token' => 'IGAA-token', 'app_id' => '990', 'app_secret' => 's3cret']);
     }
 
+    /** @param array<mixed> $data */
     private static function json(array $data, int $status = 200): MockResponse
     {
         return new MockResponse((string) json_encode($data), ['http_code' => $status]);
@@ -192,6 +194,7 @@ final class InstagramProviderTest extends TestCase
         [, $path, $query] = $this->calls[0];
         self::assertSame('/v23.0/me/media', $path);
         self::assertSame('3', $query['limit']);
+        self::assertIsString($query['fields']);
         self::assertStringContainsString('children{id,media_type,media_url,thumbnail_url}', $query['fields']);
     }
 
@@ -217,7 +220,7 @@ final class InstagramProviderTest extends TestCase
         [, $path, $query] = $this->calls[0];
         self::assertSame('/refresh_access_token', $path, 'not versioned');
         self::assertSame(['grant_type' => 'ig_refresh_token', 'access_token' => 'IGAA-token'], $query);
-        self::assertSame('IGAA-fresh', $instagram->token()->accessToken);
+        self::assertSame('IGAA-fresh', $instagram->token()?->accessToken);
         $instagram->account();
         self::assertSame('IGAA-fresh', $this->calls[1][2]['access_token']);
     }
@@ -259,7 +262,7 @@ final class InstagramProviderTest extends TestCase
             self::assertSame('4', $e->providerCode);
         }
 
-        $offline = (new InstagramProviderFactory(new MockHttpClient(static fn () => new MockResponse('', ['error' => 'Could not resolve host for https://graph.instagram.com/v23.0/me?access_token=IGAA-token']))))->create(['access_token' => 'IGAA-token']);
+        $offline = self::instagram(new MockHttpClient(static fn () => new MockResponse('', ['error' => 'Could not resolve host for https://graph.instagram.com/v23.0/me?access_token=IGAA-token'])));
         try {
             $offline->account();
             self::fail('A transport error is an error.');
@@ -270,7 +273,7 @@ final class InstagramProviderTest extends TestCase
 
     public function testWithoutATokenOnlyWhatNeedsNoneWorks(): void
     {
-        $instagram = (new InstagramProviderFactory(new MockHttpClient()))->create();
+        $instagram = self::instagram(new MockHttpClient(), []);
 
         self::assertSame(10, $instagram->capabilities()->mediaMaxCount);
         $this->expectException(InvalidConfigException::class);
@@ -338,9 +341,10 @@ final class InstagramProviderTest extends TestCase
         }
     }
 
-    private static function instagram(MockHttpClient $http): InstagramProvider
+    /** @param array<string, mixed> $options */
+    private static function instagram(MockHttpClient $http, array $options = ['access_token' => 'IGAA-token']): InstagramProvider
     {
-        $provider = (new InstagramProviderFactory($http))->create(['access_token' => 'IGAA-token']);
+        $provider = (new InstagramProviderFactory($http))->create($options);
         self::assertInstanceOf(InstagramProvider::class, $provider);
 
         return $provider;
@@ -352,6 +356,7 @@ final class InstagramProviderTest extends TestCase
         $this->provider()->delete('178');
     }
 
+    /** @return array{data: list<array<string, mixed>>, paging: array<string, mixed>} */
     private static function feedPage(): array
     {
         return [
@@ -383,7 +388,7 @@ final class InstagramProviderTest extends TestCase
         try {
             foreach ($answers as $answer) {
                 try {
-                    (new InstagramProviderFactory(new \Symfony\Component\HttpClient\MockHttpClient($answer)))->create(['access_token' => 'instagram-token-123', 'app_id' => '990', 'app_secret' => 'instagram-secret-456'])->account();
+                    self::instagram(new MockHttpClient($answer), ['access_token' => 'instagram-token-123', 'app_id' => '990', 'app_secret' => 'instagram-secret-456'])->account();
                     self::fail('no exception');
                 } catch (\Omnipost\Exception\OmnipostException $e) {
                     for ($one = $e; null !== $one; $one = $one->getPrevious()) {

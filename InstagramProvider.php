@@ -156,7 +156,7 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
                 'caption' => $caption,
                 'cover_url' => $post->coverUrl ?? $media->coverUrl,
                 'share_to_feed' => filter_var($post->options['share_to_feed'] ?? $this->shareToFeed, \FILTER_VALIDATE_BOOL),
-                'thumb_offset' => $post->options['thumb_offset'] ?? null,
+                'thumb_offset' => \is_scalar($offset = $post->options['thumb_offset'] ?? null) ? $offset : null,
             ]),
             PostKind::IMAGE => $this->container(['image_url' => $media->url, 'caption' => $caption, 'alt_text' => $media->alt]),
             PostKind::STORY => $this->container(['media_type' => 'STORIES'] + self::source($media)),
@@ -202,7 +202,7 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
                 return new Publication(Platform::INSTAGRAM, $publicationId, PublicationState::PUBLISHED, raw: $container);
             case 'ERROR':
             case 'EXPIRED':
-                return new Publication(Platform::INSTAGRAM, $publicationId, PublicationState::FAILED, error: (string) ($container['status'] ?? $container['status_code']), raw: $container);
+                return new Publication(Platform::INSTAGRAM, $publicationId, PublicationState::FAILED, error: Data::cast($container['status'] ?? $state), raw: $container);
             default:
                 return new Publication(Platform::INSTAGRAM, $publicationId, PublicationState::PROCESSING, raw: $container);
         }
@@ -216,18 +216,18 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
     public function account(): Account
     {
         $me = $this->api->get($this->user, ['fields' => 'id,username,name,profile_picture_url,followers_count,media_count,account_type']);
-        $username = (string) ($me['username'] ?? '');
         $data = Data::of($me);
+        $username = $data->text('username');
 
         return new Account(
             Platform::INSTAGRAM,
-            (string) $me['id'],
+            $data->text('id'),
             $username,
             $data->stringOrNull('name'),
             '' !== $username ? 'https://www.instagram.com/'.$username.'/' : null,
             $data->stringOrNull('profile_picture_url'),
-            isset($me['followers_count']) ? (int) $me['followers_count'] : null,
-            isset($me['media_count']) ? (int) $me['media_count'] : null,
+            $data->has('followers_count') ? $data->number('followers_count') : null,
+            $data->has('media_count') ? $data->number('media_count') : null,
             $data->stringOrNull('account_type'),
         );
     }
@@ -289,15 +289,15 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
             'code' => preg_replace('/#_$/', '', $code),
         ]]);
         // {data: [{access_token, user_id, permissions}]}, or the same flat.
-        $short = \is_array($short['data'][0] ?? null) ? $short['data'][0] : $short;
+        $short = \is_array($first = Data::of($short)->get('data.0')) ? Data::map($first) : $short;
         $permissions = $short['permissions'] ?? [];
         $long = $this->api->call('GET', $this->api->url('access_token', false), ['query' => [
             'grant_type' => 'ig_exchange_token',
             'client_secret' => $this->appSecret,
-            'access_token' => (string) ($short['access_token'] ?? ''),
+            'access_token' => Data::cast($short['access_token'] ?? ''),
         ]]);
 
-        return $this->hold($long, \is_string($permissions) ? explode(',', $permissions) : array_values((array) $permissions), isset($short['user_id']) ? (string) $short['user_id'] : null);
+        return $this->hold($long, \is_string($permissions) ? explode(',', $permissions) : Data::texts($permissions), isset($short['user_id']) ? Data::cast($short['user_id']) : null);
     }
 
     /**
@@ -353,13 +353,13 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
      */
     private function hold(array $data, array $scopes = [], ?string $accountId = null): Token
     {
-        $token = (string) ($data['access_token'] ?? '');
+        $token = Data::cast($data['access_token'] ?? '');
         if ('' === $token) {
             throw new ProviderException($this->getName(), 'No token in Instagram\'s answer.');
         }
         $this->api->setAccessToken($token);
 
-        return new Token($token, isset($data['expires_in']) ? new \DateTimeImmutable('+'.(int) $data['expires_in'].' seconds') : null, null, $scopes, $accountId);
+        return new Token($token, isset($data['expires_in']) ? new \DateTimeImmutable('+'.Data::integer($data['expires_in']).' seconds') : null, null, $scopes, $accountId);
     }
 
     private static function item(Data $m): FeedItem
@@ -373,9 +373,9 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
         $children = array_map(self::item(...), $m->objects('children.data'));
 
         return new FeedItem(
-            (string) $m->get('id'),
+            $m->text('id'),
             $kind,
-            (string) ($m->get('permalink') ?? ''),
+            $m->text('permalink'),
             $m->stringOrNull('media_url'),
             // A video's still; a picture is its own; a carousel shows its first child.
             $m->stringOrNull('thumbnail_url') ?? ('VIDEO' === $type ? null : ($m->stringOrNull('media_url') ?? ($children[0]->thumbnailUrl ?? null))),
@@ -383,8 +383,8 @@ final class InstagramProvider implements PublisherInterface, FeedInterface, Refr
             self::date($m->stringOrNull('timestamp')),
             null,
             $children,
-            $m->has('like_count') ? (int) $m->get('like_count') : null,
-            $m->has('comments_count') ? (int) $m->get('comments_count') : null,
+            $m->has('like_count') ? $m->number('like_count') : null,
+            $m->has('comments_count') ? $m->number('comments_count') : null,
             null,
             $m->toArray(),
         );

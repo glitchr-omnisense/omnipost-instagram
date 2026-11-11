@@ -107,7 +107,7 @@ final class Api
             throw Redaction::withoutArguments(new ProviderException(self::PROVIDER, 'Instagram could not be reached: '.Redaction::text($e->getMessage(), $secrets), null, null, Redaction::copy($e, $secrets)));
         }
         $wait = Throttle::after($this->backoff, $status, $headers);
-        $data = \is_array($data) ? $data : [];
+        $data = Data::map($data);
         if ($status >= 400 || isset($data['error']) || isset($data['error_type'])) {
             throw Redaction::withoutArguments($this->error($status, $data, $headers, $wait));
         }
@@ -132,10 +132,10 @@ final class Api
     private function error(int $status, array $data, array $headers = [], ?int $wait = null): ProviderException
     {
         // The Graph API: {error: {message, type, code, error_subcode}}; the OAuth endpoint: {error_type, code, error_message}.
-        $error = \is_array($data['error'] ?? null) ? $data['error'] : [];
-        $message = $this->redact((string) ($error['message'] ?? $data['error_message'] ?? \sprintf('HTTP %d.', $status)));
-        $code = isset($error['code']) ? (int) $error['code'] : null;
-        $subcode = isset($error['error_subcode']) ? (int) $error['error_subcode'] : null;
+        $error = Data::map($data['error'] ?? null);
+        $message = $this->redact(Data::cast($error['message'] ?? $data['error_message'] ?? \sprintf('HTTP %d.', $status)));
+        $code = isset($error['code']) ? Data::integer($error['code']) : null;
+        $subcode = isset($error['error_subcode']) ? Data::integer($error['error_subcode']) : null;
         $providerCode = null === $code ? null : (string) $code;
 
         if (401 === $status || 190 === $code || \in_array($subcode, [463, 467], true)) {
