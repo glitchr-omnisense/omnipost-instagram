@@ -7,8 +7,8 @@
     "authors": [{"name": "Marco Meyer", "email": "marco.meyer@glitchr.io"}],
     "require": {
         "php": ">=8.2",
-        "omnisense/contracts": "^1.0@dev",
-        "omnisense/omnipost": "^1.0@dev",
+        "omnisense/contracts": "^1.0",
+        "omnisense/omnipost": "^1.0",
         "symfony/http-client": "^6.4|^7.0|^8.0"
     },
     "require-dev": {
@@ -23,6 +23,9 @@
         "psr-4": {"Omnipost\\Instagram\\Tests\\": "Tests/"}
     },
     "extra": {
+        "branch-alias": {
+            "dev-1.x": "1.x-dev"
+        },
         "omnisense": {"policy": "policy.json"}
     },
     "config": {"sort-packages": true}

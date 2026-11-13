@@ -34,6 +34,19 @@ omnipost:
 No option is required to build the provider: `capabilities()` and `authorizationUrl()` need no
 token, and a call that needs one and finds none throws `InvalidConfigException`.
 
+## Install
+
+```sh
+composer require omnipost/instagram
+```
+
+It requires `omnisense/omnipost` `^1.0`, installed with it. A real call needs: **an Instagram
+professional account and a Meta app** (its long-lived access token); while the app is in development
+mode, the account is added as an Instagram Tester. With no account, its tests run on recorded
+answers (a `MockHttpClient`), and
+[omnisense/omnipost](https://github.com/glitchr-omnisense/omnipost#install-and-a-first-call)'s
+README has a first call that runs without one.
+
 ## Publishing, in three steps
 
 ```php
